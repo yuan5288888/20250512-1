@@ -15,9 +15,9 @@ const newPointsToConnect = [
 ];
 
 function setup() {
-  createCanvas(400, 400);
   video = createCapture(VIDEO);
-  video.size(width, height);
+  video.size(640, 480);
+  createCanvas(640, 480);
   video.hide();
 
   facemesh = ml5.facemesh(video, modelReady);
@@ -31,6 +31,8 @@ function modelReady() {
 }
 
 function draw() {
+  translate(width, 0);
+  scale(-1, 1);
   image(video, 0, 0, width, height);
   drawFacemesh();
 }
@@ -39,37 +41,26 @@ function drawFacemesh() {
   if (predictions.length > 0) {
     const keypoints = predictions[0].scaledMesh;
 
-    stroke(255, 0, 0); // 紅色線條
-    strokeWeight(5); // 線條粗細為 5
+    stroke(255, 0, 0);
+    strokeWeight(5);
 
-    // 繪製第一組點
-    for (let i = 0; i < pointsToConnect.length - 1; i++) {
-      const [x1, y1] = keypoints[pointsToConnect[i]];
-      const [x2, y2] = keypoints[pointsToConnect[i + 1]];
-      line(x1, y1, x2, y2);
-    }
-    const [xStart, yStart] = keypoints[pointsToConnect[0]];
-    const [xEnd, yEnd] = keypoints[pointsToConnect[pointsToConnect.length - 1]];
-    line(xEnd, yEnd, xStart, yStart);
+    const drawLines = (points) => {
+      for (let i = 0; i < points.length - 1; i++) {
+        if (keypoints[points[i]] && keypoints[points[i + 1]]) {
+          const [x1, y1] = keypoints[points[i]];
+          const [x2, y2] = keypoints[points[i + 1]];
+          line(x1, y1, x2, y2);
+        }
+      }
+      if (keypoints[points[0]] && keypoints[points[points.length - 1]]) {
+        const [xStart, yStart] = keypoints[points[0]];
+        const [xEnd, yEnd] = keypoints[points[points.length - 1]];
+        line(xEnd, yEnd, xStart, yStart);
+      }
+    };
 
-    // 繪製新增的點集
-    for (let i = 0; i < additionalPointsToConnect.length - 1; i++) {
-      const [x1, y1] = keypoints[additionalPointsToConnect[i]];
-      const [x2, y2] = keypoints[additionalPointsToConnect[i + 1]];
-      line(x1, y1, x2, y2);
-    }
-    const [xStart2, yStart2] = keypoints[additionalPointsToConnect[0]];
-    const [xEnd2, yEnd2] = keypoints[additionalPointsToConnect[additionalPointsToConnect.length - 1]];
-    line(xEnd2, yEnd2, xStart2, yStart2);
-
-    // 繪製新加入的點集
-    for (let i = 0; i < newPointsToConnect.length - 1; i++) {
-      const [x1, y1] = keypoints[newPointsToConnect[i]];
-      const [x2, y2] = keypoints[newPointsToConnect[i + 1]];
-      line(x1, y1, x2, y2);
-    }
-    const [xStart3, yStart3] = keypoints[newPointsToConnect[0]];
-    const [xEnd3, yEnd3] = keypoints[newPointsToConnect[newPointsToConnect.length - 1]];
-    line(xEnd3, yEnd3, xStart3, yStart3);
+    drawLines(pointsToConnect);
+    drawLines(additionalPointsToConnect);
+    drawLines(newPointsToConnect);
   }
 }
